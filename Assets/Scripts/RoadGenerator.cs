@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public struct Node
+public class Node
 {
     public Vector2Int Index;
     public Vector3 WorldPos;
@@ -13,6 +13,26 @@ public struct Node
     public int Heuristique;
     
     public Color Color;
+
+    public Node Pred;
+    
+    public Node(Vector2Int index, Vector3 worldPos, int cout, int heuristique)
+    {
+        Index = index;
+        WorldPos = worldPos;
+        Cout = cout;
+        Heuristique = heuristique;
+        Color = Color.blue;
+
+        Pred = null;
+    }
+
+    public override bool Equals(object obj)
+    {
+        Node a = (Node)obj;
+        
+        return Index == a.Index;
+    }
 }
 
 public class RoadGenerator : MonoBehaviour
@@ -28,17 +48,22 @@ public class RoadGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        InitializeGrid();
+        //InitializeGrid();
+        
     }
-
+    
     private void OnDrawGizmos()
     {
-        InitializeGrid();        
+        InitializeGrid();
+
+        var t = FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
+        
+        DrawGrid();
     }
 
     // Update is called once per frame
     void Update()
-    {
+    {   
         
     }
 
@@ -54,29 +79,80 @@ public class RoadGenerator : MonoBehaviour
         {
             for (int i = 0; i < Grid.cellSize.x; ++i)
             {
-                Node node = new Node();
-                node.Cout = 0;
-                node.Heuristique = 0;
-                node.Index = new Vector2Int(i, j);
-                node.WorldPos = new Vector3(i * TileSize - offset_x, 0, j * TileSize - offset_y );
-
+                Vector3 worldPos = new Vector3(i * TileSize - offset_x, 0, j * TileSize - offset_y );
+                Node node = new Node(new Vector2Int(i, j), worldPos, 0, 0);
+                
+                //Change the color in function of the point
                 if (node.Index == StartPoint) node.Color = Color.green;
                 else if (node.Index == EndPoint) node.Color = Color.red;
                 else node.Color = Color.blue;
 
                 nodes[i, j] = node;
+            }
+        }
+    }
+
+    void DrawGrid()
+    {
+        for (int j = 0; j < Grid.cellSize.y; ++j)
+        {
+            for (int i = 0; i < Grid.cellSize.x; ++i)
+            {
+                Gizmos.color = nodes[i, j].Color;
+                Gizmos.DrawCube(nodes[i, j].WorldPos, Vector3.one * TileSize / 2 );
                 
-                Gizmos.color = node.Color;
-                Gizmos.DrawCube(node.WorldPos, Vector3.one * TileSize / 2 );
             }
         }
     }
     
+    int Heuristic(Node start, Node target)
+    {
+        var dx = target.Index.x - start.Index.x;
+        var dy = target.Index.y - start.Index.y;
+
+        return Math.Abs(dx) + Math.Abs(dy);
+    }
+
+    bool InMatrix(Vector2Int p)
+    {
+        if (p.x < 0 || p.x > Grid.cellSize.x || p.y < 0 || p.y > Grid.cellSize.y) return false;
+
+        return true;
+    }
+    
+    List<Node> GetNeightbors(Node n)
+    {
+        List<Node> result = new();
+
+        Vector2Int[] directions = { Vector2Int.up,  Vector2Int.down, Vector2Int.left, Vector2Int.right };
+
+        foreach (var dir in directions)
+        {
+            Vector2Int newPos = n.Index + dir;
+
+            if (!InMatrix(newPos)) continue;
+
+            result.Add(nodes[newPos.x, newPos.y]);
+        }
+        
+        return result;
+    }
+    
+    Node GetSmallestNode(List<Node> nodes)
+    {
+        Node min = nodes[0];
+        
+        for (int i = 1; i < nodes.Count; ++i)
+        {
+            if (nodes[i].Heuristique < min.Heuristique)
+                min = nodes[i];
+        }
+        
+        return min;
+    }
     
     List<Vector2Int> FindPath(Node start, Node end)
     {
-        List<Vector2Int> result = new();
-
         List<Node> closed = new();
         List<Node> open = new();
 
@@ -84,7 +160,46 @@ public class RoadGenerator : MonoBehaviour
         
         while (open.Count > 0)
         {
-            
+            Node u = GetSmallestNode(open);
+            open.Remove(u);
+
+            if (u.Index == end.Index)
+            {
+                return RecoverPath(end);
+            }
+
+            List<Node> neightbors = GetNeightbors(u);
+            foreach (var neightbor in neightbors)
+            {
+                Node v = neightbor;
+                if (!closed.Contains(v))
+                {
+                    v.Cout = u.Cout + 1;
+                    v.Heuristique = v.Cout + Heuristic(v, end);
+                    v.Pred = u;
+                    
+                    open.Add(v);
+                }
+                
+                closed.Add(u);
+            }
+
+        }
+        
+        return new();
+    }
+
+    List<Vector2Int> RecoverPath(Node n)
+    {
+        List<Vector2Int> result = new();
+
+        Node val = n;
+        while (val != null)
+        {
+            val.Color = Color.magenta;
+            result.Add(val.Index);
+
+            val = val.Pred;
         }
         
         return result;
