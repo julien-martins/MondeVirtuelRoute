@@ -49,28 +49,22 @@ public class RoadGenerator : MonoBehaviour
     public float PerlinScale = 1.0f;
     [Range(0, 1.0f)]
     public float PerlinThreshold = 0.3f;
+
+    public int PathSplit = 4;
     
     // Start is called before the first frame update
     void Start()
     {
-        //InitializeGrid();
+        GeneratePerlinNoise();
+        InitializeGrid();
         
     }
     
     private void OnDrawGizmos()
     {
-        GeneratePerlinNoise();
-        InitializeGrid();
-
-        FindPathAction();
         
+
         DrawGrid();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {   
-        
     }
 
     void GeneratePerlinNoise()
@@ -145,9 +139,36 @@ public class RoadGenerator : MonoBehaviour
         return true;
     }
 
+    private bool goalReach = false;
+    
     public void FindPathAction()
     {
-        FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
+        StartCoroutine(FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]));
+        /*
+        //Separer la recherche du chemin en plusieur partie
+        float dist = Vector2.Distance(StartPoint, EndPoint);
+        float distRatio = dist / PathSplit;
+
+        List<Vector2Int>[] allPaths = new List<Vector2Int>[PathSplit];
+
+        float distXRatio = (EndPoint.x - StartPoint.x) / PathSplit;
+        float distYRatio = (EndPoint.y - StartPoint.y) / PathSplit;
+
+        Vector2Int currentStartPoint = StartPoint;
+        Vector2Int currentEndPoint = StartPoint + new Vector2Int((int)distXRatio, (int)distYRatio);
+
+        for (int i = 2; i < PathSplit; ++i)
+        {
+            Debug.Log("PathSplit : " + i);
+            
+            allPaths[i-2] = FindPath(nodes[currentStartPoint.x, currentStartPoint.y], nodes[currentEndPoint.x, currentEndPoint.y]);
+
+            currentStartPoint = currentEndPoint;
+            currentEndPoint = StartPoint + new Vector2Int((int)distXRatio, (int)distYRatio) * i;
+        }
+        */
+        //FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
+
     }
     
     List<Node> GetNeightbors(Node n)
@@ -181,7 +202,7 @@ public class RoadGenerator : MonoBehaviour
         return min;
     }
     
-    List<Vector2Int> FindPath(Node start, Node end)
+    IEnumerator FindPath(Node start, Node end)
     {
         List<Node> closed = new();
         List<Node> open = new();
@@ -195,7 +216,8 @@ public class RoadGenerator : MonoBehaviour
 
             if (u.Index == end.Index)
             {
-                return RecoverPath(end);
+                goalReach = true;
+                return;
             }
 
             List<Node> neightbors = GetNeightbors(u);
@@ -215,8 +237,6 @@ public class RoadGenerator : MonoBehaviour
             }
 
         }
-        
-        return new();
     }
 
     List<Vector2Int> RecoverPath(Node n)

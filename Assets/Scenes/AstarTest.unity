@@ -463,3 +463,4 @@ MonoBehaviour:
   EndPoint: {x: 40, y: 30}
   PerlinScale: 9
   PerlinThreshold: 0
+  PathSplit: 8
