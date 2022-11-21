@@ -54,13 +54,24 @@ Generation de pont/tunnel (methode utilise) :
 
 ### Documentation
 
-FindPath(Node start, Node end) => Genere un chemin grace a l'algorithme Astar d'un point de depart a un point de sortie
+#### Algorithme d'Astar
 
-La map est separer en Node, un Node correpond a un noeud explorer par l'algoritme d'astar.
-Node:
-    -> Index: Vector2
-    -> WorldPos: Vector3
-    -> Cout : int
-    -> Heuristique: int
-    -> Color: Color
-    -> Pred : Node
+> FindPath(Node start, Node end) => Genere un chemin grace a l'algorithme Astar d'un point de depart a un point de sortie
+>
+> La map est separer en Node, un Node correpond a un noeud explorer par l'algoritme d'astar.
+>
+> Node: 
+>   - Index: Vector2
+>   - WorldPos: Vector3
+>   - Cout : int
+>   - Heuristique: int
+>   - Color: Color
+>   - Pred : Node
+>
+
+#### Generation Perlin Noise
+
+> GeneratePerlinNoise => Genere dans un tableau une valeur de perlin noise pour chaque case dans la map
+> <img src="screens/screen1.jpg"/>
+> L'objectif est faire en sorte que l'algorithme d'astar esquive les cellules plus sombre pour avoir un chemin plus aleatoire.
+> <img src="screens/screen2.jpg"/>

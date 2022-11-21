@@ -41,9 +41,14 @@ public class RoadGenerator : MonoBehaviour
     public int TileSize = 10;
 
     private Node[,] nodes;
+    private float[,] PerlinValue;
 
     public Vector2Int StartPoint;
     public Vector2Int EndPoint;
+
+    public float PerlinScale = 1.0f;
+    [Range(0, 1.0f)]
+    public float PerlinThreshold = 0.3f;
     
     // Start is called before the first frame update
     void Start()
@@ -54,9 +59,10 @@ public class RoadGenerator : MonoBehaviour
     
     private void OnDrawGizmos()
     {
+        GeneratePerlinNoise();
         InitializeGrid();
 
-        var t = FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
+        FindPathAction();
         
         DrawGrid();
     }
@@ -67,6 +73,24 @@ public class RoadGenerator : MonoBehaviour
         
     }
 
+    void GeneratePerlinNoise()
+    {
+        PerlinValue = new float[(int)Grid.cellSize.x, (int)Grid.cellSize.y];
+
+        for (int j = 0; j < Grid.cellSize.y; ++j)
+        {
+            for (int i = 0; i < Grid.cellSize.x; ++i)
+            {
+                float x = (i / Grid.cellSize.x * PerlinScale);
+                float y = (j / Grid.cellSize.y * PerlinScale);
+
+                float val = Mathf.PerlinNoise(x, y);
+                
+                PerlinValue[i, j] = val;
+            }
+        }
+    }
+    
     //Initialize the grid with all nodes which they use in the Astar algorithm
     void InitializeGrid()
     {
@@ -81,11 +105,12 @@ public class RoadGenerator : MonoBehaviour
             {
                 Vector3 worldPos = new Vector3(i * TileSize - offset_x, 0, j * TileSize - offset_y );
                 Node node = new Node(new Vector2Int(i, j), worldPos, 0, 0);
+                var val = PerlinValue[i, j];
                 
                 //Change the color in function of the point
                 if (node.Index == StartPoint) node.Color = Color.green;
                 else if (node.Index == EndPoint) node.Color = Color.red;
-                else node.Color = Color.blue;
+                else node.Color = new Color(val, val, val);
 
                 nodes[i, j] = node;
             }
@@ -115,9 +140,14 @@ public class RoadGenerator : MonoBehaviour
 
     bool InMatrix(Vector2Int p)
     {
-        if (p.x < 0 || p.x > Grid.cellSize.x || p.y < 0 || p.y > Grid.cellSize.y) return false;
+        if (p.x < 0 || p.x >= Grid.cellSize.x || p.y < 0 || p.y >= Grid.cellSize.y) return false;
 
         return true;
+    }
+
+    public void FindPathAction()
+    {
+        FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
     }
     
     List<Node> GetNeightbors(Node n)
@@ -172,7 +202,7 @@ public class RoadGenerator : MonoBehaviour
             foreach (var neightbor in neightbors)
             {
                 Node v = neightbor;
-                if (!closed.Contains(v))
+                if (!closed.Contains(v) && PerlinValue[v.Index.x, v.Index.y] > PerlinThreshold)
                 {
                     v.Cout = u.Cout + 1;
                     v.Heuristique = v.Cout + Heuristic(v, end);
