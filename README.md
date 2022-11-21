@@ -51,3 +51,16 @@ Generation de pont/tunnel (methode utilise) :
     - Convertir le plus court chemin en un ensemble discret d'arcs 
     - On segmente la trajectoire pour identifier les sections de routes / tunnels / ponts
     - On genere la route
+
+### Documentation
+
+FindPath(Node start, Node end) => Genere un chemin grace a l'algorithme Astar d'un point de depart a un point de sortie
+
+La map est separer en Node, un Node correpond a un noeud explorer par l'algoritme d'astar.
+Node:
+    -> Index: Vector2
+    -> WorldPos: Vector3
+    -> Cout : int
+    -> Heuristique: int
+    -> Color: Color
+    -> Pred : Node
