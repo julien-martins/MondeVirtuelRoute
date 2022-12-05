@@ -310,7 +310,7 @@ Grid:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 45854060}
   m_Enabled: 1
-  m_CellSize: {x: 50, y: 50, z: 1}
+  m_CellSize: {x: 100, y: 100, z: 1}
   m_CellGap: {x: 0, y: 0, z: 0}
   m_CellLayout: 0
   m_CellSwizzle: 0
@@ -459,8 +459,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Grid: {fileID: 45854061}
   TileSize: 10
-  StartPoint: {x: 1, y: 2}
-  EndPoint: {x: 40, y: 30}
-  PerlinScale: 9
-  PerlinThreshold: 0
+  StartPoint: {x: 2, y: 11}
+  EndPoint: {x: 90, y: 85}
+  PerlinScale: 5
+  PerlinThreshold: 0.314
   PathSplit: 8

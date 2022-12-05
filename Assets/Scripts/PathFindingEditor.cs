@@ -15,5 +15,11 @@ public class PathFindingEditor : Editor
         {
             roadGenerator.FindPathAction();
         }
+        
+        if (GUILayout.Button("Intialize Grid"))
+        {
+            roadGenerator.GeneratePerlinNoise();
+            roadGenerator.InitializeGrid();
+        }
     }
 }

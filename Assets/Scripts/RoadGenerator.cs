@@ -51,6 +51,8 @@ public class RoadGenerator : MonoBehaviour
     public float PerlinThreshold = 0.3f;
 
     public int PathSplit = 4;
+
+    private bool init = false;
     
     // Start is called before the first frame update
     void Start()
@@ -63,11 +65,10 @@ public class RoadGenerator : MonoBehaviour
     private void OnDrawGizmos()
     {
         
-
         DrawGrid();
     }
 
-    void GeneratePerlinNoise()
+    public void GeneratePerlinNoise()
     {
         PerlinValue = new float[(int)Grid.cellSize.x, (int)Grid.cellSize.y];
 
@@ -86,8 +87,8 @@ public class RoadGenerator : MonoBehaviour
     }
     
     //Initialize the grid with all nodes which they use in the Astar algorithm
-    void InitializeGrid()
-    {
+    public void InitializeGrid()
+    {   
         nodes = new Node[(int)Grid.cellSize.x, (int)Grid.cellSize.y];
         
         var offset_x = (Grid.cellSize.x * TileSize) / 2 + TileSize/2;
@@ -113,6 +114,8 @@ public class RoadGenerator : MonoBehaviour
 
     void DrawGrid()
     {
+        if(!Application.isPlaying)
+        
         for (int j = 0; j < Grid.cellSize.y; ++j)
         {
             for (int i = 0; i < Grid.cellSize.x; ++i)
@@ -140,42 +143,24 @@ public class RoadGenerator : MonoBehaviour
     }
 
     private bool goalReach = false;
+
+    public void GeneratePerlinAction()
+    {
+        GeneratePerlinNoise();
+    }
     
     public void FindPathAction()
     {
-        StartCoroutine(FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]));
-        /*
-        //Separer la recherche du chemin en plusieur partie
-        float dist = Vector2.Distance(StartPoint, EndPoint);
-        float distRatio = dist / PathSplit;
-
-        List<Vector2Int>[] allPaths = new List<Vector2Int>[PathSplit];
-
-        float distXRatio = (EndPoint.x - StartPoint.x) / PathSplit;
-        float distYRatio = (EndPoint.y - StartPoint.y) / PathSplit;
-
-        Vector2Int currentStartPoint = StartPoint;
-        Vector2Int currentEndPoint = StartPoint + new Vector2Int((int)distXRatio, (int)distYRatio);
-
-        for (int i = 2; i < PathSplit; ++i)
-        {
-            Debug.Log("PathSplit : " + i);
-            
-            allPaths[i-2] = FindPath(nodes[currentStartPoint.x, currentStartPoint.y], nodes[currentEndPoint.x, currentEndPoint.y]);
-
-            currentStartPoint = currentEndPoint;
-            currentEndPoint = StartPoint + new Vector2Int((int)distXRatio, (int)distYRatio) * i;
-        }
-        */
-        //FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
-
+        InitializeGrid();
+        FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
+        RecoverPath(nodes[EndPoint.x, EndPoint.y]);
     }
-    
+
     List<Node> GetNeightbors(Node n)
     {
         List<Node> result = new();
 
-        Vector2Int[] directions = { Vector2Int.up,  Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        Vector2Int[] directions = { Vector2Int.up,  Vector2Int.down, Vector2Int.left, Vector2Int.right, new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1),  };
 
         foreach (var dir in directions)
         {
@@ -202,12 +187,13 @@ public class RoadGenerator : MonoBehaviour
         return min;
     }
     
-    IEnumerator FindPath(Node start, Node end)
+    void FindPath(Node start, Node end)
     {
         List<Node> closed = new();
         List<Node> open = new();
 
         open.Add(start);
+        
         
         while (open.Count > 0)
         {
@@ -224,12 +210,11 @@ public class RoadGenerator : MonoBehaviour
             foreach (var neightbor in neightbors)
             {
                 Node v = neightbor;
-                if (!closed.Contains(v) && PerlinValue[v.Index.x, v.Index.y] > PerlinThreshold)
+                if (!closed.Contains(v) && !open.Contains(v) && PerlinValue[v.Index.x, v.Index.y] > PerlinThreshold)
                 {
                     v.Cout = u.Cout + 1;
                     v.Heuristique = v.Cout + Heuristic(v, end);
                     v.Pred = u;
-                    
                     open.Add(v);
                 }
                 
