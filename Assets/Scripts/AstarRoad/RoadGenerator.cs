@@ -224,6 +224,11 @@ public class RoadGenerator : MonoBehaviour
         }
     }
 
+    void GetBigAngle()
+    {
+        
+    }
+    
     List<Vector2Int> RecoverPath(Node n)
     {
         List<Vector2Int> result = new();

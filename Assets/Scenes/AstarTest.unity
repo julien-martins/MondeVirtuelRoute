@@ -458,9 +458,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Grid: {fileID: 45854061}
-  TileSize: 10
+  TileSize: 16
   StartPoint: {x: 2, y: 11}
   EndPoint: {x: 90, y: 85}
   PerlinScale: 5
-  PerlinThreshold: 0.314
+  PerlinThreshold: 0.334
   PathSplit: 8
