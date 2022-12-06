@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using Curves;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,7 +17,7 @@ public class Node
     public Color Color;
 
     public Node Pred;
-    
+
     public Node(Vector2Int index, Vector3 worldPos, int cout, int heuristique)
     {
         Index = index;
@@ -50,26 +52,54 @@ public class RoadGenerator : MonoBehaviour
     [Range(0, 1.0f)]
     public float PerlinThreshold = 0.3f;
 
+    public GameObject CasePrefab;
+    
     public int PathSplit = 4;
 
     private bool init = false;
+    
+    private List<Node> path;
+    private List<Node> badNode;
+    private List<Node> testNode = new();
+
+    private List<Vector2Int> testClotho = new();
+    
+    private Clothoid _clotho;
     
     // Start is called before the first frame update
     void Start()
     {
         GeneratePerlinNoise();
         InitializeGrid();
-        
     }
     
     private void OnDrawGizmos()
     {
         
         DrawGrid();
+        
+
+        foreach (var node in badNode)
+        {
+            node.Color = Color.red;
+        }
+
+        foreach (var node in testNode)
+        {
+            node.Color = Color.blue;
+        }
+
+        foreach (var node in testClotho)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawCube(new Vector3(node.x, 0, node.y), Vector3.one * TileSize / 2);
+        }
     }
 
     public void GeneratePerlinNoise()
     {
+        Debug.Log("Generate Perlin Noise");
+        
         PerlinValue = new float[(int)Grid.cellSize.x, (int)Grid.cellSize.y];
 
         for (int j = 0; j < Grid.cellSize.y; ++j)
@@ -89,6 +119,8 @@ public class RoadGenerator : MonoBehaviour
     //Initialize the grid with all nodes which they use in the Astar algorithm
     public void InitializeGrid()
     {   
+        Debug.Log("Initialize the grid");
+        
         nodes = new Node[(int)Grid.cellSize.x, (int)Grid.cellSize.y];
         
         var offset_x = (Grid.cellSize.x * TileSize) / 2 + TileSize/2;
@@ -114,15 +146,18 @@ public class RoadGenerator : MonoBehaviour
 
     void DrawGrid()
     {
-        if(!Application.isPlaying)
+        if (Application.isPlaying) return;
+        if (nodes == null) return;
         
         for (int j = 0; j < Grid.cellSize.y; ++j)
         {
             for (int i = 0; i < Grid.cellSize.x; ++i)
             {
+                //var obj = Instantiate(CasePrefab, transform);
+                //obj.transform.position = nodes[i, j].WorldPos;
+           
                 Gizmos.color = nodes[i, j].Color;
-                Gizmos.DrawCube(nodes[i, j].WorldPos, Vector3.one * TileSize / 2 );
-                
+                Gizmos.DrawCube(nodes[i, j].WorldPos, Vector3.one * TileSize / 2);
             }
         }
     }
@@ -144,16 +179,21 @@ public class RoadGenerator : MonoBehaviour
 
     private bool goalReach = false;
 
-    public void GeneratePerlinAction()
-    {
-        GeneratePerlinNoise();
-    }
-    
     public void FindPathAction()
     {
+        testClotho.Clear();
+        
         InitializeGrid();
         FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
-        RecoverPath(nodes[EndPoint.x, EndPoint.y]);
+        path = RecoverPath(nodes[EndPoint.x, EndPoint.y]);
+        
+        badNode = GetStrongAngle(path);
+
+        for (int i = 0; i < badNode.Count-1; i += 2)
+        {
+            MakeClothoide(badNode[i+1].WorldPos, badNode[i].WorldPos);
+        }
+        
     }
 
     List<Node> GetNeightbors(Node n)
@@ -224,20 +264,130 @@ public class RoadGenerator : MonoBehaviour
         }
     }
 
-    void GetBigAngle()
+    List<Node> GetStrongAngle(List<Node> path)
     {
+        List<Node> BadPos = new();
         
+        var dir = path[1].WorldPos - path[0].WorldPos;
+        float prevAngle = Vector3.Angle(dir, transform.right);
+        for (int i = 1; i < path.Count-1; i ++)
+        {
+            dir = path[i + 1].WorldPos - path[i].WorldPos;
+
+            var dist = Vector3.Distance(path[i].WorldPos, path[i + 1].WorldPos);
+            
+            var angle = Vector3.Angle(dir, transform.right);
+            
+            if(prevAngle != angle) {
+                BadPos.Add(path[i]);
+            }
+            
+            prevAngle = angle;
+        }
+
+        //Merge error Node
+        var mergedNode = MergeErrorNode(path, BadPos);
+        var splitErrorNodes = SplitErrorNode(path, mergedNode);
+
+        BadPos = splitErrorNodes;
+        
+        return BadPos;
+    }
+
+    List<Node> MergeErrorNode(List<Node> path, List<Node> badPos)
+    {
+        List<Node> mergedErrorNodes = new List<Node>();
+
+        List<Node> errorNode = new();
+        int errorCount = 0;
+        foreach (var path_node in path)
+        {
+            if(errorNode.Count > 0) errorCount++;
+            
+            foreach (var badpos in badPos)
+            {
+                //We are on an error node
+                if (path_node.Index == badpos.Index) {
+                    errorNode.Add(path_node);
+                }
+            }
+
+            //We can merge all error after 5 node after the first error node
+            if (errorCount > 9)
+            {
+                mergedErrorNodes.Add(errorNode[errorNode.Count / 2]);
+
+                errorNode = new();
+                errorCount = 0;
+            }
+        }
+
+        return mergedErrorNodes;
+    }
+    List<Node> SplitErrorNode(List<Node> path, List<Node> badPos)
+    {
+        List<Node> splitErrorNodes = new();
+        
+        for (int i = 1; i < path.Count; i++)
+        {
+            for (int j = 0; j < badPos.Count; j++)
+            {
+                if (path[i].Index != badPos[j].Index) continue;
+                
+                for (int k = i - 5; k < i; k++)
+                {
+                    if (k < 0) continue;
+                    
+                    splitErrorNodes.Add(path[k]);
+                    break;
+                }
+                
+                for (int k = i + 5; k > i; k--)
+                {
+                    if (k > path.Count) continue;
+                    
+                    splitErrorNodes.Add(path[k]);
+                    break;
+                }
+                
+            }
+        }
+
+        return splitErrorNodes;
+    }
+
+    public void MakeClothoide(Vector3 start, Vector3 end)
+    {
+        var dir = end - start;
+        _clotho = new Clothoid(start.x, start.z, -1.8, 0.0, 0.5, Vector3.Distance(start, end));
+        //_clotho =  Clothoid.FromPoseAndPoint(0.0, 0.0, 0.0, 25.0, 25.0);
+        Vector3 centre = new Vector3();
+
+        foreach (Point2D point in _clotho.GetPoints(5))
+        {
+            centre.x = (float)point.X;
+            centre.y = (float)point.Y;
+            
+            centre.z = 0.0f;
+
+            testClotho.Add(new Vector2Int((int)point.X, (int)point.Y));
+            
+            //GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            //go.transform.position = centre;
+            //go.transform.parent = transform;
+
+        }
     }
     
-    List<Vector2Int> RecoverPath(Node n)
+    List<Node> RecoverPath(Node n)
     {
-        List<Vector2Int> result = new();
+        List<Node> result = new();
 
         Node val = n;
         while (val != null)
         {
             val.Color = Color.magenta;
-            result.Add(val.Index);
+            result.Add(val);
 
             val = val.Pred;
         }

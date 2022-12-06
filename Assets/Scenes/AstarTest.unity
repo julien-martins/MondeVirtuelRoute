@@ -189,7 +189,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &36590864
 GameObject:
@@ -285,7 +285,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &45854060
+--- !u!1 &623520378
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -293,41 +293,48 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 45854062}
-  - component: {fileID: 45854061}
+  - component: {fileID: 623520380}
+  - component: {fileID: 623520379}
   m_Layer: 0
-  m_Name: Grid
+  m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!156049354 &45854061
-Grid:
+--- !u!114 &623520379
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 45854060}
+  m_GameObject: {fileID: 623520378}
   m_Enabled: 1
-  m_CellSize: {x: 100, y: 100, z: 1}
-  m_CellGap: {x: 0, y: 0, z: 0}
-  m_CellLayout: 0
-  m_CellSwizzle: 0
---- !u!4 &45854062
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d2001a21171c604f8126a836c376089, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startX: 0
+  startY: 0
+  startDirection: 1
+  startCurvature: 0
+  a: 11
+  length: 125
+  n: 10
+--- !u!4 &623520380
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 45854060}
+  m_GameObject: {fileID: 623520378}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -1269.3036, y: -596.54517, z: 534.1399}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &832247022
 GameObject:
@@ -422,6 +429,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1580829181}
+  - component: {fileID: 1580829183}
   - component: {fileID: 1580829182}
   m_Layer: 0
   m_Name: RoadGenerator
@@ -443,7 +451,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1580829182
 MonoBehaviour:
@@ -457,10 +465,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eff9bb96914bc7b4cbc2c1414977d2a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Grid: {fileID: 45854061}
+  Grid: {fileID: 1580829183}
   TileSize: 16
   StartPoint: {x: 2, y: 11}
   EndPoint: {x: 90, y: 85}
   PerlinScale: 5
   PerlinThreshold: 0.334
+  CasePrefab: {fileID: 7560483544338383850, guid: 64e7dc410bc7c7342890374881200c48, type: 3}
   PathSplit: 8
+--- !u!156049354 &1580829183
+Grid:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1580829180}
+  m_Enabled: 1
+  m_CellSize: {x: 100, y: 100, z: 1}
+  m_CellGap: {x: 0, y: 0, z: 0}
+  m_CellLayout: 0
+  m_CellSwizzle: 0
