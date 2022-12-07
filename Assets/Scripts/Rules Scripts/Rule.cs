@@ -7,10 +7,17 @@ public class Rule : ScriptableObject
 {
     public string letter;
     [SerializeField]
-    private string[] result = null;
+    private string[] results = null;
+    [SerializeField]
+    private bool randomResult = false;
 
     public string GetResult()
     {
-        return result[0];
+        if (randomResult)
+        {
+            int randomIndex = Random.Range(0, results.Length);
+            return results[randomIndex];
+        }
+        return results[0];
     }
 }

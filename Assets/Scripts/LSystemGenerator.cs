@@ -11,6 +11,10 @@ public class LSystemGenerator : MonoBehaviour
     [Range(0,10)]
     public int iterationLimit = 1;
 
+    public bool randomIgnoreRuleModifier = true;
+    [Range(0, 1)]
+    public float chanceToIgnoreRule = 0.3f;
+
     private void Start()
     {
         Debug.Log(GenerateSentence());
@@ -50,6 +54,13 @@ public class LSystemGenerator : MonoBehaviour
         {
             if(rule.letter == c.ToString())
             {
+                if (randomIgnoreRuleModifier && iterationIndex > 1)
+                {
+                    if(Random.value < chanceToIgnoreRule)
+                    {
+                        return;
+                    }
+                }
                 newWord.Append(GrowRecursive(rule.GetResult(), iterationIndex + 1));
             }
         }
