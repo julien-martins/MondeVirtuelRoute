@@ -467,12 +467,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Grid: {fileID: 1580829183}
   TileSize: 16
+  CasePrefab: {fileID: 7560483544338383850, guid: 64e7dc410bc7c7342890374881200c48, type: 3}
   StartPoint: {x: 2, y: 11}
   EndPoint: {x: 90, y: 85}
   PerlinScale: 5
   PerlinThreshold: 0.334
-  CasePrefab: {fileID: 7560483544338383850, guid: 64e7dc410bc7c7342890374881200c48, type: 3}
-  PathSplit: 8
+  Test: {fileID: 0}
 --- !u!156049354 &1580829183
 Grid:
   m_ObjectHideFlags: 0
