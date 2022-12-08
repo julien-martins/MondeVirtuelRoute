@@ -430,6 +430,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1580829181}
   - component: {fileID: 1580829183}
+  - component: {fileID: 1580829184}
   - component: {fileID: 1580829182}
   m_Layer: 0
   m_Name: RoadGenerator
@@ -472,7 +473,7 @@ MonoBehaviour:
   EndPoint: {x: 90, y: 85}
   PerlinScale: 5
   PerlinThreshold: 0.334
-  Test: {fileID: 0}
+  LSystemGenerator: {fileID: 1580829184}
 --- !u!156049354 &1580829183
 Grid:
   m_ObjectHideFlags: 0
@@ -481,7 +482,25 @@ Grid:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1580829180}
   m_Enabled: 1
-  m_CellSize: {x: 100, y: 100, z: 1}
+  m_CellSize: {x: 150, y: 150, z: 1}
   m_CellGap: {x: 0, y: 0, z: 0}
   m_CellLayout: 0
   m_CellSwizzle: 0
+--- !u!114 &1580829184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1580829180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe9cfe676356bc34191690a0998a1faf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rules:
+  - {fileID: 11400000, guid: e9dec11380ced3f489509a9b6b634831, type: 2}
+  rootSentence: F-F
+  iterationLimit: 3
+  randomIgnoreRuleModifier: 1
+  chanceToIgnoreRule: 0.3

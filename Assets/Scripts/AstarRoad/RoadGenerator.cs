@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using Curves;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Node
 {
@@ -38,7 +40,7 @@ public class Node
     }
 }
 
-[RequireComponent(typeof(Grid))]
+[RequireComponent(typeof(Grid), typeof(LSystemGenerator))]
 public class RoadGenerator : MonoBehaviour
 {
     [Header("Grid Parameter")]
@@ -55,7 +57,14 @@ public class RoadGenerator : MonoBehaviour
     [Range(0, 1.0f)]
     public float PerlinThreshold = 0.3f;
 
-    public GameObject Test;
+    [Header("LSystem Parameter")] 
+    public LSystemGenerator LSystemGenerator;
+
+    private SimpleVisualizer _simpleVisualizer;
+    
+    //public GameObject Test;
+    
+    
     
     private Node[,] nodes;
     private float[,] PerlinValue;
@@ -183,42 +192,124 @@ public class RoadGenerator : MonoBehaviour
         path = RecoverPath(nodes[EndPoint.x, EndPoint.y]);
 
         badNode = SmoothPath(path);
-
-
-        /* TO DELETE
-        for (int i = 0; i < badNode.Count-1; i += 2)
-        {
-            MakeClothoide(badNode[i+1].WorldPos, badNode[i].WorldPos);
-        }
-        */
+        
+        //Make the Lsystem on the second node on the path
+        AddLSystem();
 
     }
 
-    /* TO DELETE
-    public void MakeClothoide(Vector3 start, Vector3 end)
+    #region LSystemIntegration
+
+    void AddLSystem()
     {
-        var dir = end - start;
-        _clotho = new Clothoid(start.x, start.z, -1.8, 0.0, 0.5, Vector3.Distance(start, end));
-        //_clotho =  Clothoid.FromPoseAndPoint(0.0, 0.0, 0.0, 25.0, 25.0);
-        Vector3 centre = new Vector3();
-
-        foreach (Point2D point in _clotho.GetPoints(5))
+        for (int j = 1; j < path.Count-1; ++j)
         {
-            centre.x = (float)point.X;
-            centre.y = (float)point.Y;
-            
-            centre.z = 0.0f;
 
-            testClotho.Add(new Vector2Int((int)point.X, (int)point.Y));
-            
-            //GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            //go.transform.position = centre;
-            //go.transform.parent = transform;
+            if(Random.Range(0, 32) != 1) continue;
 
+            var sequence = LSystemGenerator.GenerateSentence();
+            
+            _simpleVisualizer = new SimpleVisualizer();
+
+            Vector3 normal = new Vector3(-(int)(path[j+1].Index.x - path[j].Index.x), 0, (int)(path[j+1].Index.y - path[j].Index.y));
+            
+            if(Random.Range(0, 2) == 1)
+                _simpleVisualizer.VisualizeSequence(sequence, path[j].WorldPos, normal);
+            else
+                _simpleVisualizer.VisualizeSequence(sequence, path[j].WorldPos, -normal);
+
+            for (int i = 0; i < _simpleVisualizer.positions.Count; ++i)
+            {
+                var offsetX = (Grid.cellSize.x / 2) * TileSize;
+                var offsetZ = (Grid.cellSize.y / 2) * TileSize;
+
+                Vector2Int coord = new Vector2Int((int)Mathf.Abs((_simpleVisualizer.positions[i].x + offsetX) / TileSize),
+                    (int)Mathf.Abs((_simpleVisualizer.positions[i].z + offsetZ) / TileSize));
+
+                Vector2Int nextCoord = new Vector2Int((int)Mathf.Abs((_simpleVisualizer.Nextpositions[i].x + offsetX) / TileSize),
+                    (int)Mathf.Abs((_simpleVisualizer.Nextpositions[i].z + offsetZ) / TileSize));
+                
+                if (InMatrix(coord))
+                {
+                    bool find = false;
+                    foreach (var node in path)
+                    {
+                        if (!InMatrix(coord.x, coord.y) || !InMatrix(nextCoord.x, nextCoord.y)) continue;
+                        
+                        var currentNode = nodes[coord.x, coord.y];
+                        var nextNode = nodes[nextCoord.x, nextCoord.y];
+                        
+                        if (currentNode.Index == node.Index || currentNode.Index == nextNode.Index)
+                        {
+                            find = true;
+                            break;
+                        }
+
+                    }
+
+                    if (!find)
+                    {
+                        
+                        
+                        BresenhamLine(coord.x, coord.y, nextCoord.x, nextCoord.y);
+                        
+                        //nodes[coord.x, coord.y].Color = Color.yellow;
+                    }
+
+                }
+
+            }
+        
         }
     }
-    */
 
+    public List<Vector3> BresenhamLine(int x0, int y0, int x1, int y1)
+    {
+        List<Vector3> res = new();
+
+        // Calculate dx and dy
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+ 
+        int step;
+ 
+        // If dx > dy we will take step as dx
+        // else we will take step as dy to draw the complete
+        // line
+        if (Math.Abs(dx) > Math.Abs(dy))
+            step = Math.Abs(dx);
+        else
+            step = Math.Abs(dy);
+ 
+        // Calculate x-increment and y-increment for each step
+        float x_incr = (float)dx / step;
+        float y_incr = (float)dy / step;
+ 
+        // Take the initial points as x and y
+        float x = x0;
+        float y = y0;
+ 
+        for (int i = 0; i < step; i++) {
+ 
+            // putpixel(round(x), round(y), WHITE);
+            
+            // res.Add(new Vector3((float)Math.Round(x), 0, (float)Math.Round(y)));
+            
+            //Get node on the grid and change the color
+            if(!InMatrix((int)x, (int)y)) continue;
+            
+            nodes[(int)x, (int)y].Color = Color.yellow;
+
+            x += x_incr;
+            y += y_incr;
+            // delay(10);
+        }
+        
+        return res;
+    }
+
+    #endregion
+    
     #region SmoothProcedureFunction
     
     /*
@@ -474,6 +565,8 @@ public class RoadGenerator : MonoBehaviour
 
         return true;
     }
+    
+    bool InMatrix(int x, int y) => InMatrix(new Vector2Int(x, y));
     
     /*
      * Get the smallest node on the list

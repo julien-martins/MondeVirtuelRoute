@@ -5,14 +5,15 @@ using UnityEngine;
 public class SimpleVisualizer : MonoBehaviour
 {
     public LSystemGenerator lSystem;
-    List<Vector3> positions = new List<Vector3>();
+    public List<Vector3> positions = new List<Vector3>();
+    public List<Vector3> Nextpositions = new List<Vector3>();
 
     public GameObject prefab;
     public Material lineMaterial;
 
-    private int length = 8;
+    private int length = 96;
     private float angle = 90;
-
+    
     public int Length
     {
         get 
@@ -35,16 +36,20 @@ public class SimpleVisualizer : MonoBehaviour
         var sequence = lSystem.GenerateSentence();
         VisualizeSequence(sequence);
     }
-    private void VisualizeSequence(string sequence)
+    public void VisualizeSequence(string sequence, Vector3 startPos = new (), Vector3 dir = new())
     {
         Stack<AgentParameters> savePoints = new Stack<AgentParameters>();
-        var currentPosition = Vector3.zero;
+        var currentPosition = startPos;
 
-        Vector3 direction = Vector3.forward;
+        if(dir == Vector3.zero) dir = Vector3.forward;
+        Vector3 direction = dir;
         Vector3 tempPosition = Vector3.zero;
 
         positions.Add(currentPosition);
+        Nextpositions.Add(currentPosition);
 
+        angle = Random.Range(70, 80);
+        
         foreach(var letter in sequence)
         {
             EncodingLetters encoding = (EncodingLetters)letter;
@@ -75,9 +80,10 @@ public class SimpleVisualizer : MonoBehaviour
                 case EncodingLetters.draw:
                     tempPosition = currentPosition;
                     currentPosition += direction * length;
-                    DrawLine(tempPosition, currentPosition, Color.red);
+                    //DrawLine(tempPosition, currentPosition, Color.red);
                     Length -= 2;
                     positions.Add(currentPosition);
+                    Nextpositions.Add(tempPosition);
                     break;
                 case EncodingLetters.turnRight:
                     direction = Quaternion.AngleAxis(angle, Vector3.up)*direction;
@@ -90,10 +96,12 @@ public class SimpleVisualizer : MonoBehaviour
             }
         }
 
+        /*
         foreach(var position in positions)
         {
             Instantiate(prefab, position, Quaternion.identity);
         }
+        */
     }
 
     private void DrawLine(Vector3 start, Vector3 end, Color color)
