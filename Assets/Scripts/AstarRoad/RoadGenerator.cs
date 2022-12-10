@@ -364,6 +364,8 @@ public class RoadGenerator : MonoBehaviour
     List<Node> GetStrongAngle(List<Node> path)
     {
         List<Node> BadPos = new();
+
+        if (path.Count <= 1) return BadPos;
         
         var dir = path[1].WorldPos - path[0].WorldPos;
         float prevAngle = Vector3.Angle(dir, transform.right);
