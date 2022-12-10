@@ -183,9 +183,7 @@ public class RoadGenerator : MonoBehaviour
      * callback function called by the PathFindingEditor class
      */
     public void FindPathAction()
-    {
-        testClotho.Clear();
-        
+    {   
         GeneratePerlinNoise();
         InitializeGrid();
         FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
