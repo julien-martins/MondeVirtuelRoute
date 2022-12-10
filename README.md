@@ -114,7 +114,24 @@ public void GeneratePerlinNoise()
         }
     }
 ```
+### Utilisation
+------------------------------------------------
+```cs
+public void FindPathAction()
+    {   
+        GeneratePerlinNoise();
+        InitializeGrid();
+        FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
+    }
+```
+GeneratePerlinNoise() -> Genere une valeur entre 0 et 1 pour chaque case du tableau (PerlinValue) qui fait la meme taille que la map
 
+InitializeGrid() -> Initialise la grille en positionant chaque noeud, en leur assignant la valeur du bruit de perlin calculer precedement et en leur affactant une coleur lier par l'etat du noeud
+
+FindPath(Node start, Node end) => Calcule le chemin entre le point de depart et le point d'arrive en prenant en conte le bruit de perlin generee et stocke le chemon calcule dans une variable (path).
+
+### Rendu
+------------------------------------------------
 Affichage de la grille avec le point de depart(Case verte) et le point d'arrive (Case rouge)
 ![screen1](/screens/screen1.jpg)
 
