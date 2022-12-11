@@ -154,7 +154,7 @@ Ces courbes sont egalement connus sont le nom spirale d'Euler
     cf https://mathcurve.com/courbes2d/cornu/cornu.shtml
 
 
-### L-systems
+## L-systems
 ------------------------------------------------
 
 Le principe d'un L-System est relativement simple : on fourni une "phrase" de départ composée à l'aide d'un alphabet.
