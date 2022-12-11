@@ -32,6 +32,17 @@ public class Node
         Pred = null;
     }
 
+    public Node()
+    {
+        Index = Vector2Int.zero;
+        WorldPos = Vector3.zero;
+        Cout = 0;
+        Heuristique = 0;
+        Color = Color.blue;
+
+        Pred = null;
+    }
+    
     public override bool Equals(object obj)
     {
         Node a = (Node)obj;
@@ -40,9 +51,12 @@ public class Node
     }
 }
 
-[RequireComponent(typeof(Grid), typeof(LSystemGenerator))]
+[RequireComponent(typeof(Grid), typeof(LSystemGenerator), typeof(RoadMeshGenerator))]
 public class RoadGenerator : MonoBehaviour
 {
+    [Header("General Parameter")] 
+    public bool DebugVisualizer = false;
+    
     [Header("Grid Parameter")]
     public Grid Grid;
     public int TileSize = 10;
@@ -59,12 +73,16 @@ public class RoadGenerator : MonoBehaviour
 
     [Header("LSystem Parameter")] 
     public LSystemGenerator LSystemGenerator;
-
+    
     private SimpleVisualizer _simpleVisualizer;
     
+    private Mesh roadMesh;
+    private List<Mesh> secondaryRoadMesh;
+    
     //public GameObject Test;
-    
-    
+
+    [Header("Road Mesh Parameter")] 
+    public RoadMeshGenerator RoadMeshGenerator;
     
     private Node[,] nodes;
     private float[,] PerlinValue;
@@ -87,7 +105,8 @@ public class RoadGenerator : MonoBehaviour
     }
     
     private void OnDrawGizmos()
-    {   
+    {
+        if (!DebugVisualizer) return;
         DrawGrid();
 
         if (badNode == null) return;
@@ -184,8 +203,9 @@ public class RoadGenerator : MonoBehaviour
      */
     public void FindPathAction()
     {
-        testClotho.Clear();
-        
+        secondaryRoadMesh = new();
+        RoadMeshGenerator.DeleteChildMesh();
+
         GeneratePerlinNoise();
         InitializeGrid();
         FindPath(nodes[StartPoint.x, StartPoint.y], nodes[EndPoint.x, EndPoint.y]);
@@ -194,17 +214,99 @@ public class RoadGenerator : MonoBehaviour
         badNode = SmoothPath(path);
         
         //Make the Lsystem on the second node on the path
-        AddLSystem();
+        var secondaryPath = AddLSystem();
 
+        
+        foreach (var path in secondaryPath)
+        {
+            Debug.Log(DrawSecondaryRoad(path).Count);
+            secondaryRoadMesh.AddRange(DrawSecondaryRoad(path));
+        }
+        
+        
+        GameObject go1 = new GameObject();
+        go1.name = "Secondary Mesh";
+        go1.transform.parent = transform;
+        foreach (var msh in secondaryRoadMesh)
+        {
+            GameObject go = new GameObject();
+            go.name = "mesh";
+            go.transform.parent = go1.transform;
+            var meshFilter = go.AddComponent<MeshFilter>();
+            var meshRenderer = go.AddComponent<MeshRenderer>();
+
+            meshFilter.mesh = msh;
+            meshRenderer.material = RoadMeshGenerator.SecondaryRoadMat;
+        }
+        
+    }
+
+    public List<Mesh> DrawSecondaryRoad(List<Node> path)
+    {
+        if (path.Count == 0) return new();
+        
+        List<Node> open = new();
+        List<Node> closed = new();
+
+        List<Mesh> res = new();
+        
+        Vector2Int[] dirs =
+        {
+            new Vector2Int(1, -1), new Vector2Int(1, 0), new Vector2Int(-1, 0),
+            new Vector2Int(0, 1), new Vector2Int(0, -1), new Vector2Int(1, 1),
+            new Vector2Int(-1, -1), new Vector2Int(-1, 1)
+        };
+        
+        open.Add(path[0]);
+        while (open.Count > 0)
+        {   
+            Node n = open[0];
+            open.RemoveAt(0);
+            
+            //Get AllNeighbors
+            foreach (Vector2Int dir in dirs)
+            {
+                Vector2Int newIndex = n.Index + dir;
+                if (!InMatrix(newIndex)) continue;
+
+                Node newNode = nodes[newIndex.x, newIndex.y];
+
+                if (!path.Contains(newNode)) continue;
+                if (open.Contains(newNode) || closed.Contains(newNode)) continue;
+
+                //Draw Mesh
+                res.Add(RoadMeshGenerator.CreateRoadMesh(n, newNode));
+
+                open.Add(newNode);
+            }
+
+            closed.Add(n);
+        }
+
+        return res;
+    }
+    
+    public void GenerateRoadMesh()
+    {
+        roadMesh = RoadMeshGenerator.CreateRoadMesh(path);
+
+        var meshFilter = transform.GetOrAddComponent<MeshFilter>();
+        var meshRenderer = transform.GetOrAddComponent<MeshRenderer>();
+
+        meshFilter.mesh = roadMesh;
+        meshRenderer.material = RoadMeshGenerator.MainRoadMat;
     }
 
     #region LSystemIntegration
 
-    void AddLSystem()
+    List<List<Node>> AddLSystem()
     {
-        for (int j = 1; j < path.Count-1; ++j)
-        {
+        List<List<Node>> res = new();
 
+        Node keepTheLast = null;
+        for (int j = 0; j < path.Count-1; ++j)
+        {
+            keepTheLast = null;
             if(Random.Range(0, 32) != 1) continue;
 
             var sequence = LSystemGenerator.GenerateSentence();
@@ -218,6 +320,7 @@ public class RoadGenerator : MonoBehaviour
             else
                 _simpleVisualizer.VisualizeSequence(sequence, path[j].WorldPos, -normal);
 
+            var t = new List<Node>();
             for (int i = 0; i < _simpleVisualizer.positions.Count; ++i)
             {
                 var offsetX = (Grid.cellSize.x / 2) * TileSize;
@@ -249,23 +352,22 @@ public class RoadGenerator : MonoBehaviour
 
                     if (!find)
                     {
-                        
-                        
-                        BresenhamLine(coord.x, coord.y, nextCoord.x, nextCoord.y);
-                        
-                        //nodes[coord.x, coord.y].Color = Color.yellow;
+                        var path = BresenhamLine(coord.x, coord.y, nextCoord.x, nextCoord.y);
+                        t.AddRange(path);
                     }
 
                 }
 
             }
-        
+            res.Add(t);
         }
+
+        return res;
     }
 
-    public List<Vector3> BresenhamLine(int x0, int y0, int x1, int y1)
+    public List<Node> BresenhamLine(int x0, int y0, int x1, int y1)
     {
-        List<Vector3> res = new();
+        List<Node> res = new();
 
         // Calculate dx and dy
         int dx = x1 - x0;
@@ -290,19 +392,16 @@ public class RoadGenerator : MonoBehaviour
         float y = y0;
  
         for (int i = 0; i < step; i++) {
- 
-            // putpixel(round(x), round(y), WHITE);
-            
-            // res.Add(new Vector3((float)Math.Round(x), 0, (float)Math.Round(y)));
-            
             //Get node on the grid and change the color
             if(!InMatrix((int)x, (int)y)) continue;
+
+            var node = nodes[(int)x, (int)y];
             
-            nodes[(int)x, (int)y].Color = Color.yellow;
+            node.Color = Color.yellow;
+            res.Add(node);
 
             x += x_incr;
             y += y_incr;
-            // delay(10);
         }
         
         return res;
@@ -332,11 +431,32 @@ public class RoadGenerator : MonoBehaviour
     {
         List<Node> result = new();
 
+        int startIndex = 0;
+        int endIndex = 0;
         for (int i = 0; i < errorNodes.Count; i += 3)
         {
             Vector3 p0 = errorNodes[i].WorldPos;
             Vector3 p1 = errorNodes[i + 1].WorldPos;
             Vector3 p2 = errorNodes[i + 2].WorldPos;
+
+            for (int j = 0; j < path.Count; ++j)
+            {
+                if (errorNodes[i].Index == path[j].Index)
+                {
+                    startIndex = j;
+                }
+                if (errorNodes[i + 2].Index == path[j].Index)
+                {
+                    endIndex = j;
+                }
+            }
+
+            //Remove nodes on the path
+            for (int j = startIndex; j <= endIndex; ++j)
+            {
+                path[j].Color = Color.cyan;
+                path.RemoveAt(j);
+            }
             
             for (float t = 0; t <= 1; t += 0.1f)
             {
@@ -417,7 +537,7 @@ public class RoadGenerator : MonoBehaviour
             }
 
             //We can merge all error after 5 node after the first error node
-            if (errorCount > 9)
+            if (errorCount > 10)
             {
                 mergedErrorNodes.Add(errorNode[errorNode.Count / 2]);
 
@@ -475,6 +595,21 @@ public class RoadGenerator : MonoBehaviour
     public Vector3 QuadraticBezierCurves(float t, Vector3 p0, Vector3 p1, Vector3 p2)
     {
         return (1 - t)*((1-t)*p0 + t * p1) + t * ((1 - t) * p1 + t * p2);
+    }
+
+    public Vector3 HermineCurves(float t, Vector3 p0, Vector3 d0, Vector3 p1, Vector3 d1)
+    {
+        Vector3 res = Vector3.zero;
+        res.x = (float)((2 * Math.Pow(t, 3) - 3 * Math.Pow(t, 2) + 1) * p0.x +
+                (Math.Pow(t, 3) - 2 * Math.Pow(t, 2) + t) * d0.x +
+                (-2 * Math.Pow(t, 3) + 3 * Math.Pow(t, 2) * p1.x + (Math.Pow(t, 3) - Math.Pow(t, 2)) * d1.x));
+        
+        res.z = (float)((2 * Math.Pow(t, 3) - 3 * Math.Pow(t, 2) + 1) * p0.z +
+                        (Math.Pow(t, 3) - 2 * Math.Pow(t, 2) + t) * d0.z +
+                        (-2 * Math.Pow(t, 3) + 3 * Math.Pow(t, 2) * p1.z + 
+                         (Math.Pow(t, 3) - Math.Pow(t, 2)) * d1.z));
+        
+        return res;
     }
     #endregion
     

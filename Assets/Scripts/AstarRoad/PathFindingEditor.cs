@@ -11,15 +11,21 @@ public class PathFindingEditor : Editor
         DrawDefaultInspector();
 
         RoadGenerator roadGenerator = (RoadGenerator)target;
-        if (GUILayout.Button("Find Path"))
-        {
-            roadGenerator.FindPathAction();
-        }
-        
         if (GUILayout.Button("Intialize Grid"))
         {
             roadGenerator.GeneratePerlinNoise();
             roadGenerator.InitializeGrid();
         }
+        
+        if (GUILayout.Button("Find Path"))
+        {
+            roadGenerator.FindPathAction();
+        }
+
+        if (GUILayout.Button("Generate Road Mesh"))
+        {
+            roadGenerator.GenerateRoadMesh();
+        }
+        
     }
 }
