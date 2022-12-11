@@ -144,9 +144,9 @@ Affichage du chemin en esquivant les endroits ou le poids est important
 
 ## Lissage de Courbe :
 
-Nous pouvons voir qu'en raison de notre système de grille (obligatoire pour l'utilisation de notre algorithme A*) les chemins ne semblent pas très naturels, les angles pris par la route se devaient d'être aménagés.
-La méthode utilisée pour lisser les courbes que nous avions générées s'est faite en plusieurs étapes.
-Nous allons voir lesquels nous avons utilisées, lesquels ont étés retenues, et le résultat final
+Nous pouvons voir qu'en raison de notre système de grille (obligatoire pour l'utilisation de notre algorithme A*) les chemins ne semblent pas très naturels, les angles pris par la route se devaient d'être aménagés. 
+La méthode utilisée pour lisser les courbes que nous avions générées s'est faite en plusieurs étapes. 
+Nous allons voir lesquels nous avons utilisé, lesquels ont été retenues, et le résultat final.
 
 ### Développement des clothoides :
 
@@ -154,9 +154,9 @@ Dans un premier temps, nous avons décidés de nous inspirer de ce qui se faisai
 ![screen3](/screens/road.jpg)
 Ici, un échangeur d'autoroute, on peut voir les courbes tracés, ces derniers permettent à la voiture de décélérer au fur et à mesure qu'elle sort de la voie rapide.
 La notion mathématique qui se cache derrière ce virage en douceur se nomme une courbe Clothoide.
-Les clothoides sont des fonctions dont la courbure varie linéairement  en fonction d'une longueur d'arc.
+Les clothoides sont des fonctions dont la courbure varie linéairement en fonction d'une longueur d'arc.
 
-Ces courbes sont également connus sous le nom "spirale d'Euler".
+Ces courbes sont également connues sous le nom "spirale d'Euler".
 
     cf https://fr.wikipedia.org/wiki/Clotho%C3%AFde
     cf https://mathcurve.com/courbes2d/cornu/cornu.shtml
@@ -184,11 +184,11 @@ Ce code permettait de générer une courbe clothoide, en entrant en paramètre p
 startX et Y sont les coordonnées du premier point de la courbe
 startDirection est l'angle en radiant dans lequel commence la courbe
 startCurvature est un nombre de 0 à 1 qui détermine sur quel point commence la courbe (déterminant s'il sera plus ou moins en spirale)
-A est l'intensité avec laquelle la clothoide se rétracte sur elle même
+A est l'intensité avec laquelle la clothoide se rétracte sur elle-même.
 
 ![screen4](/screens/ClothoidResult.png)
 
-On peut voir que la clothoid ainsi générée part d'un point de l'angle à lisser et suit son équation pour prolonger la route.
+On peut voir que la courbe clothoide ainsi générée part d'un point de l'angle à lisser et suit son équation pour prolonger la route.
 Cependant, les courbes clothoides ne sont pas très adaptées pour relier deux droites entre elles.
 
 ![screen5](/screens/DroiteClothoide.png)
@@ -203,10 +203,10 @@ Nous nous sommes rapidement aperçu que cela n'avait pas d'intérêt réel, et n
 
 ![screen6](/screens/BezierCurves.png) 
 
-Nous avons donc abandonné l'utilisation des courbes clothoides, et nous sommes tournés vers des algorithmes que nous maitrisions plus, car nous avons étudiés ces derniers en cours.
+Nous avons donc abandonné l'utilisation des courbes clothoides, et nous sommes tournés vers des algorithmes que nous maîtrisions plus, car nous avons étudié ces derniers en cours.
 Premièrement, les courbes de Bézier montraient d'excellents résultats, lorsque nous faisions varier les points à la main.
 Cependant, comme on peut le voir sur l'image, il est difficile de trouver une équation qui permette de relier tous les types d'angles correctement.
-Cela vient du fait que ces courbes ont besoins de quatre points pour être tracé.
+Cela vient du fait que ces courbes ont besoin de quatre points pour être tracé.
 
 ```cs
     public List<Node> GenerateSmoothCurves(List<Node> errorNodes)
@@ -239,7 +239,7 @@ Cela vient du fait que ces courbes ont besoins de quatre points pour être trac�
     }
 ```
 
-Nous nous sommes donc tournés vers une autre méthode étudiée en cours, qui nécessite que trois points pour être tracé.
+Nous nous sommes donc tournés vers une autre méthode étudiée en cours, qui ne nécessite que trois points pour être tracé.
 Dans notre cas de lissage de courbe, les trois points étaient à notre disposition.
 Cette méthode est la courbe de Hermite.
 
