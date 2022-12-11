@@ -177,7 +177,8 @@ Cela donne donc :
 Pour l'intégration du L-System, nous avons décidé d'une implémentation en algorithme récursif. On définit au préalable des règles à utiliser et une limite d'itération. On peut ensuite appeller la fonction avec une phrase pour obtenir en retour la version traduite à l'aide des règles.
 
 ```csharp
-public string GenerateSentence(string word = null)
+    // Fonction a appeller pour obtenir le resultat du L-system.
+    public string GenerateSentence(string word = null)
     {
         if(word == null)
         {
@@ -187,6 +188,8 @@ public string GenerateSentence(string word = null)
         return GrowRecursive(word);
     }
 
+    // Si le nombre d'iterations > au nombre d'iterations max alors on renvoit le mot.
+    // Sinon, on lance la recherche pour chaque caractere de la phrase pour savoir si une regle existe.
     private string GrowRecursive(string word, int iterationIndex = 0)
     {
         if(iterationIndex >= iterationLimit)
@@ -205,6 +208,8 @@ public string GenerateSentence(string word = null)
         return newWord.ToString();
     }
 
+    // On cherche parmi toutes les règles si il en existe qui se rapporte au caractère donné.
+    // Si non rien ne se passe, sinon on appelle GrowRecursive avec le mot formé par la traduction avant de l'ajouter à la phrase complète.
     private void ProcessRulesRecursivelly(StringBuilder newWord, char c, int iterationIndex)
     {
         foreach(var rule in rules)
