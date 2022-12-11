@@ -186,7 +186,7 @@ startDirection est l'angle en radiant dans lequel commence la courbe
 startCurvature est un nombre de 0 à 1 qui détermine sur quel point commence la courbe (déterminant s'il sera plus ou moins en spirale)
 A est l'intensité avec laquelle la clothoide se rétracte sur elle même
 
-![screen4](/screens/Clothoid Result.png)
+![screen4](/screens/ClothoidResult.png)
 
 On peut voir que la clothoid ainsi générée part d'un point de l'angle à lisser et suit son équation pour prolonger la route.
 Cependant, les courbes clothoides ne sont pas très adaptées pour relier deux droites entre elles.
