@@ -250,7 +250,7 @@ On peut traduire l'alphabet utilisé par le L-System dans des instruction pour n
 
 En appliquant ces instructions sur le résultat du L-system présenté précédemment, on obtient le résultat graphique ci-dessous : 
 
-![Lsystem1](/screens/L-system1.png)
+![Lsystem1](/screens/L-System1.png)
 
 ### Ajout d'aléatoire pour une génération procédurale
 
@@ -270,7 +270,7 @@ Nous avons également ajouté une chance d'ignorer une règle quand on détecte 
 
 Avec ces deux changements, on peut observer des formes très différentes de routes construites à partir de la même phrase de départ :
 
-![Lsystem2](/screens/L-system2.png)
-![Lsystem3](/screens/L-system3.png)
-![Lsystem4](/screens/L-system4.png)
+![Lsystem2](/screens/L-System2.png)
+![Lsystem3](/screens/L-System3.png)
+![Lsystem4](/screens/L-System4.png)
 
