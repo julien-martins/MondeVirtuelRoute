@@ -239,13 +239,8 @@ Cela vient du fait que ces courbes ont besoin de quatre points pour être tracé
     }
 ```
 
-Nous nous sommes donc tournés vers une autre méthode étudiée en cours, qui ne nécessite que trois points pour être tracé.
-Dans notre cas de lissage de courbe, les trois points étaient à notre disposition.
-Cette méthode est la courbe de Hermite.
-
-![screen7](/screens/HermiteCurve.png) 
-
-Les angles empruntés par la route semblent bien plus naturels et praticables, si bien qu'on peut aisément imaginer l'absence d'un système de grille sous-jacent.
+Nous sommes restés sur la méthode de Bézier mais une piste d'amélioration possible serait d'utiliser une courbe d'Hermite à la place.
+La courbe d'Hermite aurait été plus en concordance avec les valeurs d'entrées qu'il était possible de fournir.
 
 
 
@@ -375,3 +370,10 @@ Avec ces deux changements, on peut observer des formes très différentes de rou
 ![Lsystem3](/screens/L-System3.png)
 ![Lsystem4](/screens/L-System4.png)
 
+## Reunion des parties
+
+------------------------------------------------
+
+Après avoir présenté les différents pilliers de l'application, on peut voir ci-dessous un exemple de résultat obtenu après avoir retravaillé les textures :
+
+![Reunion](/screens/Reunion.png)
