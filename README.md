@@ -142,19 +142,115 @@ Affichage de la grille avec le point de depart(Case verte) et le point d'arrive 
 Affichage du chemin en esquivant les endroits ou le poids est important
 ![screen2](/screens/screen3.jpg)
 
-### Lissage de Courbe :
+## Lissage de Courbe :
 
-Lisser les routes avec les ensembles clothoides
+Nous pouvons voir qu'en raison de notre système de grille (obligatoire pour l'utilisation de notre algorithme A*) les chemins ne semblent pas très naturels, les angles pris par la route se devaient d'être aménagés.
+La méthode utilisée pour lisser les courbes que nous avions générées s'est faite en plusieurs étapes.
+Nous allons voir lesquels nous avons utilisées, lesquels ont étés retenues, et le résultat final
 
-Les clothoides sont des courbes dont la courbure varie lineairement en fonction d'une longueur d'arc.
+### Développement des clothoides :
 
-Ces courbes sont egalement connus sont le nom spirale d'Euler
+Dans un premier temps, nous avons décidés de nous inspirer de ce qui se faisait avec de véritables routes. 
+![screen3](/screens/road.jpg)
+Ici, un échangeur d'autoroute, on peut voir les courbes tracés, ces derniers permettent à la voiture de décélérer au fur et à mesure qu'elle sort de la voie rapide.
+La notion mathématique qui se cache derrière ce virage en douceur se nomme une courbe Clothoide.
+Les clothoides sont des fonctions dont la courbure varie linéairement  en fonction d'une longueur d'arc.
+
+Ces courbes sont également connus sous le nom "spirale d'Euler".
 
     cf https://fr.wikipedia.org/wiki/Clotho%C3%AFde
     cf https://mathcurve.com/courbes2d/cornu/cornu.shtml
+### Implémentation des clothoides :
+
+```cs
+public Clothoid(double startX, double startY, double startDirection, double startCurvature, double a, double length)
+        {
+            _start_x = startX;
+            _start_y = startY;
+            _start_direction = startDirection;
+            _start_curvature = startCurvature;
+            _a = a;
+            _length = length;
+
+            Posture2D endPosture = InterpolatePosture2D(1.0);
+
+            _end_x = endPosture.X;
+            _end_y = endPosture.Y;
+            _end_direction = endPosture.Direction;
+            _end_curvature = endPosture.Curvature;
+        }
+```
+Ce code permettait de générer une courbe clothoide, en entrant en paramètre plusieurs éléments
+startX et Y sont les coordonnées du premier point de la courbe
+startDirection est l'angle en radiant dans lequel commence la courbe
+startCurvature est un nombre de 0 à 1 qui détermine sur quel point commence la courbe (déterminant s'il sera plus ou moins en spirale)
+A est l'intensité avec laquelle la clothoide se rétracte sur elle même
+
+![screen4](/screens/Clothoid Result.png)
+
+On peut voir que la clothoid ainsi générée part d'un point de l'angle à lisser et suit son équation pour prolonger la route.
+Cependant, les courbes clothoides ne sont pas très adaptées pour relier deux droites entre elles.
+
+![screen5](/screens/DroiteClothoide.png)
+
+On voit sur cette image comme cette méthode permet de relier un cercle à une droite et non deux droites ensembles. 
+On comprend mieux l'espace supplémentaire que les échangeurs d'autoroutes prennent pour tourner sur un angle de 90 degrés.
+En effet, le fait de prendre rapidement un angle circulaire posait le problème d'un repli trop fort pour lier deux points.
+
+Nous avons alors pensé  à tracer deux courbes clothoides à partir de chaque point l'une vers l'autre, et de modifier la route suivant le point où elles se croisent.
+Nous nous sommes rapidement aperçu que cela n'avait pas d'intérêt réel, et ne résolvait pas le problème d'un virage trop fort.
+### Implémentation des courbes d'Hermite :
+
+![screen6](/screens/BezierCurves.png) 
+
+Nous avons donc abandonné l'utilisation des courbes clothoides, et nous sommes tournés vers des algorithmes que nous maitrisions plus, car nous avons étudiés ces derniers en cours.
+Premièrement, les courbes de Bézier montraient d'excellents résultats, lorsque nous faisions varier les points à la main.
+Cependant, comme on peut le voir sur l'image, il est difficile de trouver une équation qui permette de relier tous les types d'angles correctement.
+Cela vient du fait que ces courbes ont besoins de quatre points pour être tracé.
+
+```cs
+    public List<Node> GenerateSmoothCurves(List<Node> errorNodes)
+    {
+        List<Node> result = new();
+
+        for (int i = 0; i < errorNodes.Count; i += 3)
+        {
+            Vector3 p0 = errorNodes[i].WorldPos;
+            Vector3 p1 = errorNodes[i + 1].WorldPos;
+            Vector3 p2 = errorNodes[i + 2].WorldPos;
+            
+            for (float t = 0; t <= 1; t += 0.1f)
+            {
+                Vector3 p = QuadraticBezierCurves(t, p0, p1, p2);
+
+                var offsetX = (Grid.cellSize.x/2) * TileSize;
+                var offsetZ = (Grid.cellSize.y/2) * TileSize;
+                
+                Vector2Int coord = new Vector2Int((int)Mathf.Abs((p.x + offsetX) / TileSize ), (int)Mathf.Abs((p.z + offsetZ) / TileSize ));
+                
+                if (InMatrix(coord))
+                {
+                    result.Add(nodes[coord.x, coord.y]);
+                }
+            }
+        }
+        
+        return result;
+    }
+```
+
+Nous nous sommes donc tournés vers une autre méthode étudiée en cours, qui nécessite que trois points pour être tracé.
+Dans notre cas de lissage de courbe, les trois points étaient à notre disposition.
+Cette méthode est la courbe de Hermite.
+
+![screen7](/screens/HermiteCurve.png) 
+
+Les angles empruntés par la route semblent bien plus naturels et praticables, si bien qu'on peut aisément imaginer l'absence d'un système de grille sous-jacent.
 
 
-## L-systems
+
+## L-systemsBézier 
+
 ------------------------------------------------
 
 Le principe d'un L-System est relativement simple : on fourni une "phrase" de départ composée à l'aide d'un alphabet.
