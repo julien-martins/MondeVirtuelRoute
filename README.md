@@ -1,4 +1,4 @@
-# Monde Virtuel
+# Monde virtuel
 
 Julien Percheron, Nils Carron, Julien Martins
 
