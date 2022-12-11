@@ -249,7 +249,7 @@ Les angles empruntés par la route semblent bien plus naturels et praticables, s
 
 
 
-## L-systemsBézier 
+## L-systems
 
 ------------------------------------------------
 
